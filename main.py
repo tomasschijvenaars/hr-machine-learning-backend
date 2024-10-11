@@ -1,11 +1,24 @@
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
 from cv_stripper import CVStripper
 from bson.objectid import ObjectId
 from database import Database
-import json
 
 app = FastAPI()
+
+# CORS Configuration
+origins = [
+    "http://localhost:420",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # Allow specified origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all headers
+)
 
 database = Database()
 

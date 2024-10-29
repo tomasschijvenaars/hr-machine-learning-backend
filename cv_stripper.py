@@ -1,9 +1,11 @@
 from pdfminer.high_level import extract_text
-from classes import dataclasses
 from dotenv import load_dotenv
 from openai import OpenAI
 import json
 import os
+
+# Models
+from classes.cv import Cv
 
 load_dotenv("./config/.env")
 
@@ -19,8 +21,8 @@ class CVStripper:
 
             # Prepare messages for GPT-4
             messages = [
-                {"role": "system", "content": "You analyze CV's and turn it into an EmployeeCV model"},
-                {"role": "user", "content": f"<CV>\n{extracted_text}\n</CV>\nGive me an EmployeeCV model based on this CV information."}
+                {"role": "system", "content": "You analyze CV's and turn it into an Cv model"},
+                {"role": "user", "content": f"<CV>\n{extracted_text}\n</CV>\nGive me an Cv model based on this CV information."}
             ]
 
             # Send request to GPT-4
@@ -28,10 +30,10 @@ class CVStripper:
                 model="gpt-4o-mini",
                 messages=messages,
                 temperature=0.4,
-                response_format=dataclasses.EmployeeCV
+                response_format=Cv
             )
 
-            # Parse the response and create EmployeeCV object
+            # Parse the response and create Cv object
             cv_data = response.choices[0].message.content
             
             return json.loads(cv_data)

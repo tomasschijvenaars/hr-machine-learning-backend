@@ -6,7 +6,8 @@ from bson.objectid import ObjectId
 from database import Database
 
 # Models
-from classes.user import User
+from classes.user import RegisterUser
+from classes.user import LoginUser
 
 app = FastAPI()
 
@@ -129,7 +130,7 @@ async def candidate(file: UploadFile = File(...)):
 
 
 @app.post("/register")
-async def register(userData: User):
+async def register(userData: RegisterUser):
     if (userData.password != userData.password_check):
         return JSONResponse({ "success": False, "error": "passwords must match" })
     
@@ -142,6 +143,17 @@ async def register(userData: User):
             
     return JSONResponse({ "success": True, "id": str(result.inserted_id) })
 
+
+@app.post("/login")
+async def register(userData: LoginUser):
+    foundUser = database.getCollection("users").find_one({ "username": userData.username })
+    
+    if (foundUser is not None and foundUser["password"] == userData.password):
+        return JSONResponse({ "success": True, "_id": str(foundUser["_id"]) })
+    
+    return JSONResponse({ "success": False, "error": "Invalid login" })
+
+
 @app.get("/users/{id}")
 async def users(id: str):
     document = database.getCollection("users").find_one({ "_id": ObjectId(id) })
@@ -149,3 +161,22 @@ async def users(id: str):
     document["_id"] = str(document["_id"])  # Convert ObjectId to string for JSON serialization
             
     return JSONResponse(document)
+
+
+@app.post("/users/{id}/cv")
+async def cv(id: str, file: UploadFile = File(...)):
+    path = f"uploads/resumes/{id}.pdf"            
+
+    # Save pdf
+    content = await file.read()
+    with open(path, "wb") as f:
+        f.write(content)
+        
+    cvUser = cvStripper.extract(path)
+    
+    result = database.getCollection("users").update_one(
+        {"_id": ObjectId(id)}, 
+        {"$set": cvUser}
+    )
+    
+    return JSONResponse({ "success": True })

@@ -8,6 +8,7 @@ from database import Database
 # Models
 from classes.user import RegisterUser
 from classes.user import LoginUser
+from classes.job import Job
 
 app = FastAPI()
 
@@ -52,41 +53,6 @@ async def pdf(file: UploadFile = File(...)):
         
     extractedData = cvStripper.extract(path)
     return JSONResponse(extractedData)
-
-
-@app.post("/savepdf/")
-async def savepdf(file: UploadFile = File(...)):
-    path = f"uploads/resumes/{file.filename}"
-
-    # Save pdf
-    content = await file.read()
-    with open(path, "wb") as f:
-        f.write(content)
-        
-    extractedData = cvStripper.extract(path)
-    
-    result = database.getCollection("test-collection").insert_one(extractedData)
-            
-    return JSONResponse({ "success": True, "id": str(result.inserted_id) })
-
-
-@app.get("/getpdf/{id}")
-async def getpdf(id: str):
-    document = database.getCollection("test-collection").find_one({ "_id": ObjectId(id) })
-        
-    document["_id"] = str(document["_id"])  # Convert ObjectId to string for JSON serialization
-    
-    return JSONResponse(document)
-
-
-@app.get("/jobs/")
-async def jobs():
-    documents = list( database.getCollection("jobs").find())
-
-    for document in documents:
-        document["_id"] = str(document["_id"])  # Convert ObjectId to string for JSON serialization
-            
-    return JSONResponse(documents)
 
 
 @app.get("/jobs/{id}")
@@ -165,7 +131,7 @@ async def users(id: str):
 
 @app.post("/users/{id}/cv")
 async def cv(id: str, file: UploadFile = File(...)):
-    path = f"uploads/resumes/{id}.pdf"            
+    path = f"uploads/resumes/{id}.pdf"
 
     # Save pdf
     content = await file.read()
@@ -180,3 +146,31 @@ async def cv(id: str, file: UploadFile = File(...)):
     )
     
     return JSONResponse({ "success": True })
+
+
+@app.get("/jobs")
+async def jobs():
+    documents = list( database.getCollection("jobs").find())
+
+    for document in documents:
+        document["_id"] = str(document["_id"])  # Convert ObjectId to string for JSON serialization
+            
+    return JSONResponse(documents)
+
+
+@app.get("/jobs/{id}")
+async def jobs(id: str):
+    document = database.getCollection("users").find_one({ "_id": ObjectId(id) })
+    
+    document["_id"] = str(document["_id"])  # Convert ObjectId to string for JSON serialization
+            
+    return JSONResponse(document)
+
+
+@app.post("/jobs")
+async def jobs(job: Job):
+    jobDict = vars(job)
+    
+    result = database.getCollection("jobs").insert_one(jobDict)
+            
+    return JSONResponse({ "success": True, "id": str(result.inserted_id) })

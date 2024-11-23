@@ -12,6 +12,7 @@ from classes.user import RegisterUser
 from classes.user import LoginUser
 from classes.job import Job
 from classes.users import User
+from classes.users_score import Score
 
 app = FastAPI()
 
@@ -183,7 +184,6 @@ async def jobs(id: str, userId: str):
     job = database.getCollection("jobs").find_one({ "_id": ObjectId(id) })
     user = database.getCollection("users").find_one({ "_id": ObjectId(userId) })
 
-
     user_skills = user["skills"]
     
     combined_skills = user_skills["programming_languages"] + user_skills["frameworks_and_tools"] + user_skills["soft_skills"]
@@ -210,7 +210,6 @@ async def jobs(id: str, userId: str):
     #print(result)
 
     return JSONResponse({ "result": result })
-
 
 @app.get("/users")
 async def users():

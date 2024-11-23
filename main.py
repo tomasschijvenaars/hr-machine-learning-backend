@@ -228,3 +228,43 @@ async def users(user: User):
         result = database.getCollection("users").insert_one(user_dict)
 
         return JSONResponse({"success": True, "id": str(result.inserted_id)})
+
+@app.get("/knn/{id}")
+async def knn(id: str):    
+    job = database.getCollection("jobs").find_one({ "_id": ObjectId(id) })
+    jobless_users = list(database.getCollection("users").find({
+        "$or": [
+            { "has_job": False },
+            { "has_job": { "$exists": False } }
+        ]
+    }))
+
+    results = []
+
+    for user in jobless_users:
+        user_skills = user["skills"]
+        
+        combined_skills = user_skills["programming_languages"] + user_skills["frameworks_and_tools"] + user_skills["soft_skills"]
+
+        job_skills = job["skills"]
+
+        skills_similarity = stringcompare.calculate_match_percentage(job_skills, combined_skills)
+
+        job_experience_similarity = int(user["work_experience_total_years"]) / job["years_of_experience"] * 100
+
+        sollicitant_perc = [skills_similarity, job_experience_similarity]
+
+        users_with_job = list(database.getCollection("users").find({ "has_job": True }))
+
+        array_users_with_job = [
+            [obj["percent_skills"], obj["percent_experience"], int(obj["job_succesful"])]
+            for obj in users_with_job
+        ]   
+        
+        result = knn_script.classify_point(array_users_with_job, sollicitant_perc)
+
+        print(result)
+
+        results.append(result)
+
+    return JSONResponse({ "results": results })

@@ -1,8 +1,8 @@
 #Hier worden de lijst skills van de cv en vacature vergeleken, output is een percentage
 class StringCompare:
-    def calculate_match_percentage(cv_data, vacature_data):
-        set1 = set(cv_data)
-        set2 = set(vacature_data)
+    def calculate_match_percentage(self, cv_data, vacature_data):
+        set1 = set([s.lower() for s in cv_data])
+        set2 = set([s.lower() for s in vacature_data])
 
         common_elements = set1.intersection(set2)
 

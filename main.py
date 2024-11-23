@@ -13,6 +13,7 @@ from classes.user import LoginUser
 from classes.job import Job
 from classes.users import User
 from classes.users_score import Score
+from classes.select_user import SelectUser
 
 app = FastAPI()
 
@@ -250,20 +251,43 @@ async def knn(id: str):
         skills_similarity = stringcompare.calculate_match_percentage(job_skills, combined_skills)
 
         job_experience_similarity = int(user["work_experience_total_years"]) / job["years_of_experience"] * 100
+        job_exp_check = min(job_experience_similarity, 100)
 
-        sollicitant_perc = [skills_similarity, job_experience_similarity]
-
+        sollicitant_perc = [skills_similarity, job_exp_check]
         users_with_job = list(database.getCollection("users").find({ "has_job": True }))
 
         array_users_with_job = [
             [obj["percent_skills"], obj["percent_experience"], int(obj["job_succesful"])]
             for obj in users_with_job
-        ]   
+        ]
         
         result = knn_script.classify_point(array_users_with_job, sollicitant_perc)
+        new_object = {
+        "user": {
+            "id":str(user["_id"]),  # Example value for 'result'
+            "name": user["name"],  # Example value for 'result'
+        },
+        "skills_perc": skills_similarity,
+        "experience_perc": job_exp_check,
+        "result": result,  # Example value for 'result'
+        # "sollicitant data": sollicitant_perc  # Example value for 'experience_percent'
+    }
 
         print(result)
 
-        results.append(result)
+        results.append(new_object)
 
     return JSONResponse({ "results": results })
+
+
+@app.post("/jobs/{jobId}/select-user/{userId}")
+async def jobs(jobId: str, userId: str):
+    print(userId)
+    
+    result = database.getCollection("users").update_one(
+        {"_id": ObjectId(userId)},
+        {"$set": {"has_job": True}}
+    )
+            
+    # return JSONResponse({ "success": True, "id": str(result) })
+    return JSONResponse({ "success": True })

@@ -11,6 +11,7 @@ from stringcompare import StringCompare
 from classes.user import RegisterUser
 from classes.user import LoginUser
 from classes.job import Job
+from classes.users import User
 
 app = FastAPI()
 
@@ -209,3 +210,21 @@ async def jobs(id: str, userId: str):
     #print(result)
 
     return JSONResponse({ "result": result })
+
+
+@app.get("/users")
+async def users():
+    documents = list( database.getCollection("users").find())
+
+    for document in documents:
+        document["_id"] = str(document["_id"])  # Convert ObjectId to string for JSON serialization
+            
+    return JSONResponse(documents)
+
+@app.post("/users")
+async def users(user: User):
+        user_dict = vars(user)
+
+        result = database.getCollection("users").insert_one(user_dict)
+
+        return JSONResponse({"success": True, "id": str(result.inserted_id)})

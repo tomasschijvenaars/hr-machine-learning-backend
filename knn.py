@@ -1,14 +1,14 @@
 import numpy as np
 
 class KNN:
-  # Function to compute Euclidean distance between two points
-  def compute_distance(self, sollicitant, data_point):
-      return np.linalg.norm(np.array(sollicitant) - np.array(data_point))
+  #Euclidean afstand tussen 2 punten
+  def compute_distance(self, point1, point2):
+      return np.linalg.norm(np.array(point1) - np.array(point2))
 
-  # Function to find the k nearest neighbors
-  def find_k_nearest_neighbors(self, hasjob_data, sollicitant, k):
+  #functie om KNN te vinden
+  def find_k_nearest_neighbors(self, job_data, sollicitant, k):
       distances = []
-      for data_point in hasjob_data:
+      for data_point in job_data:
           distance = self.compute_distance(sollicitant, data_point[:-1])
           distances.append((data_point, distance))
       distances.sort(key=lambda x: x[1])
@@ -16,28 +16,10 @@ class KNN:
       return neighbors
 
   #Hoofdfunctie voor het calculeren van de KNN, KNN staat op 3
-  def classify_point(self, hasjob_data, sollicitant):
-      neighbors = self.find_k_nearest_neighbors(hasjob_data, sollicitant, 3)
+  #job_data = array van de %vaardigheden, %ervaring en goed/slecht die mensen hadden wanneer ze aan een vacature werden gekoppeld.
+  #sollicitant = array van %vaardigheden, %ervaring vergeleken met de huidige vacature
+  def classify_point(self, job_data, sollicitant):
+      neighbors = self.find_k_nearest_neighbors(job_data, sollicitant, 3)
       labels = [neighbor[-1] for neighbor in neighbors]
       prediction = max(set(labels), key=labels.count)
-      return prediction, neighbors
-
-  # Main execution block
-  if __name__ == "__main__":
-      # Dataset moet uit de database komen. Deze dataset moet aangevult kunnen worden met een [70, 70, 1]
-      data = [
-          [80, 85, 1],
-          [90, 90, 1],
-          [80, 80, 1],
-          [40, 40, 0],
-          [45, 40, 0]
-      ]
-
-      # Parameters
-      k = 3  #Number of neighbors
-      new_point = [60, 60]  #New data point to classify
-
-      # Prediction
-      predicted_label, nearest_neighbors = classify_point(data, new_point)
-
-      print(f'Data={new_point}, Predicted: {predicted_label}')
+      return prediction

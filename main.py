@@ -4,6 +4,8 @@ from fastapi.responses import JSONResponse
 from cv_stripper import CVStripper
 from bson.objectid import ObjectId
 from database import Database
+from knn import KNN
+from stringcompare import StringCompare
 
 # Models
 from classes.user import RegisterUser
@@ -28,6 +30,9 @@ app.add_middleware(
 database = Database()
 
 cvStripper = CVStripper()
+
+knn_script = KNN()
+stringcompare = StringCompare()
 
 @app.get("/")
 def read_root():
@@ -72,10 +77,6 @@ async def candidates():
         document["_id"] = str(document["_id"])  # Convert ObjectId to string for JSON serialization
             
     return JSONResponse(documents)
-
-
-
-
 
 # new
 

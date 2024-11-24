@@ -12,6 +12,7 @@ from classes.user import RegisterUser
 from classes.user import LoginUser
 from classes.job import Job
 from classes.users import User
+from classes.insert import AddData
 from classes.users_score import Score
 from classes.select_user import SelectUser
 
@@ -281,13 +282,28 @@ async def knn(id: str):
 
 
 @app.post("/jobs/{jobId}/select-user/{userId}")
-async def jobs(jobId: str, userId: str):
+async def jobs(jobId: str, userId: str, insertdata: AddData):
     print(userId)
-    
+
+    print(insertdata)
+
+    temp1 = vars(insertdata)
+
     result = database.getCollection("users").update_one(
         {"_id": ObjectId(userId)},
-        {"$set": {"has_job": True}}
+        {"$set": {
+            "percent_skills": temp1["percent_skills"],
+            "percent_experience": temp1["percent_experience"],
+            "job_succesful": temp1["job_succesful"],
+            "has_job": True
+        }}
     )
+
+    result = database.getCollection("jobs").update_one(
+         {"_id": ObjectId(jobId)},
+         {"$set": {"disabled": True}}
+    )
+
             
     # return JSONResponse({ "success": True, "id": str(result) })
     return JSONResponse({ "success": True })
